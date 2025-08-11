@@ -16,7 +16,7 @@ function updateDate() {
 }
 
 btn.addEventListener('click', () => {
-  console.log('Hello');
+  //console.log('Hello');
   is24hours = !is24hours;
   btn.innerText = is24hours
     ? "Switch to 12-hour format"
