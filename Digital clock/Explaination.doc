@@ -1,0 +1,90 @@
+Main Program
+│
+├── Variable Declarations
+│   ├── timeDiv = document.querySelector('#time')
+│   ├── dateDiv = document.querySelector('.date')
+│   ├── btn = document.querySelector('#button')
+│   └── is24hours = false
+│
+├── Function Definitions
+│   ├── updateTime()
+│   │   ├── IF is24hours == true
+│   │   │     └── timeDiv.innerText = current time (24-hour format)
+│   │   └── ELSE
+│   │         └── timeDiv.innerText = current time (12-hour format)
+│   │
+│   └── updateDate()
+│         └── dateDiv.innerText = current date (en-IN format)
+│
+├── Event Listeners
+│   └── btn.addEventListener('click', function)
+│       ├── Toggle is24hours (true ↔ false)
+│       ├── Change btn.innerText accordingly:
+│       │     ├── If is24hours → "Switch to 12-hour format"
+│       │     └── Else → "Switch to 24-hour format"
+│       └── Call updateTime()
+│
+├── Interval & Initial Calls
+│   ├── setInterval(updateTime, 1000)   // Update time every second
+│   ├── updateDate()                    // Set date once at start
+│   └── updateTime()                    // Set time immediately at start
+
+
+                                                      Step-by-step explanation
+
+const timeDiv = document.querySelector('#time');
+Selects the first DOM element with id="time" and stores it in timeDiv. If no such element exists this will be null.
+
+const dateDiv = document.querySelector('.date');
+Selects the first DOM element with class date and stores it in dateDiv.
+
+const btn = document.querySelector('#button');
+Selects the button element with id="button" and stores it in btn.
+
+let is24hours = false;
+A boolean flag that tracks whether the clock should show 24-hour time. Initially false → start in 12-hour (AM/PM) mode.
+
+function updateTime() { ... }
+
+This function updates the visible time inside timeDiv.
+
+If is24hours is true it runs:
+
+timeDiv.innerText = new Date().toLocaleTimeString('en-GB', { hour12: false });
+That creates a Date object and formats it using 'en-GB' (British English) and hour12: false which forces a 24-hour clock (e.g. 17:23:05). Using 'en-GB' plus hour12:false is a common cross-browser way to force 24-hour formatting.
+
+Otherwise it runs:
+
+timeDiv.innerText = new Date().toLocaleTimeString();
+which formats time using the browser/user locale defaults (often shows AM/PM in US locales).
+
+Note: toLocaleTimeString() usually includes hours, minutes, seconds unless options override that.
+
+function updateDate() { ... }
+
+dateDiv.innerText = new Date().toLocaleDateString('en-IN');
+Sets the date text using the Indian locale 'en-IN' (commonly DD/MM/YYYY format). It only runs when you call updateDate().
+
+btn.addEventListener('click', () => { ... });
+
+//Adds a click handler to the button. On each click it:
+//Logs 'Hello' to the console (console.log('Hello'); — probably for quick debugging).
+
+Toggles the is24hours flag: is24hours = !is24hours;.
+
+Updates the button label using a ternary:
+
+btn.innerText = is24hours
+  ? "Switch to 12-hour format"
+  : "Switch to 24-hour format";
+
+That label is the action the button will perform when clicked next (so when you are in 24-hour mode the button shows "Switch to 12-hour format").
+
+Calls updateTime() immediately so the displayed clock switches instantly without waiting for the next interval tick.
+
+setInterval(updateTime, 1000);
+Schedules updateTime() to run every 1000 milliseconds (every second), keeping the displayed time live.
+
+updateDate(); and updateTime();
+These two calls initialize the UI immediately when the script runs so the user sees the correct date and time right away (otherwise you'd need to wait a second for the first setInterval tick).
+
