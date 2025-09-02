@@ -1,0 +1,532 @@
+Main Program
+│
+├── Variables & Elements
+│   ├── generateTaskId() → // Generates a random 4-digit number for each task ID
+│   ├── addButton = #add-button // "Add" button element
+│   ├── inputField = #input-field // Text input for entering task
+│   ├── taskList = #task-list // <ul> or <ol> where tasks will appear
+│   ├── tasks = [] // Array storing all tasks (objects)
+│   ├── filterButtons = .filter-btn // Buttons for filtering tasks
+│   ├── currentFilter = "All" // Default filter is "All"
+│   ├── filteredTasks = [] // Tasks after applying current filter
+│
+├── Event Listeners
+│   ├── addButton.click
+│   │   ├── Get text from input
+│   │   ├── If empty → alert user ("Please enter a task!")
+│   │   ├── Else:
+│   │   │   ├── addTask(taskText) // Create and store task
+│   │   │   ├── applyFilter() // Refresh task display
+│   │   │   └── Clear input field
+│   │
+│   ├── filterButtons.click
+│   │   ├── Remove 'active' class from all filter buttons
+│   │   ├── Add 'active' class to clicked button
+│   │   ├── Set currentFilter based on button's "data-filter" attribute
+│   │   └── applyFilter() // Show tasks for selected filter
+│   │
+│   ├── inputField.keypress (Enter)
+│   │   ├── Same logic as addButton click → allows adding task by pressing Enter
+│   │
+│   ├── clearCompletedButton.click
+│   │   ├── Remove all completed tasks from tasks[]
+│   │   └── applyFilter() // Update displayed list
+│   │
+│   └── DOMContentLoaded
+│       ├── applyFilter() // Initial display of tasks
+│       └── updateItemsLeft() // Show how many tasks are pending
+│
+├── Functions
+│   ├── applyFilter()
+│   │   ├── If "All" → filteredTasks = tasks
+│   │   ├── If "Active" → filteredTasks = tasks where completed == false
+│   │   ├── If "Completed" → filteredTasks = tasks where completed == true
+│   │   └── showTasks() // Refresh the task list UI
+│   │
+│   ├── addTask(userInput)
+│   │   ├── Create task object:
+│   │   │   ├── id = generateTaskId()
+│   │   │   ├── text = userInput
+│   │   │   └── completed = false
+│   │   └── Push into tasks[] array
+│   │
+│   ├── showTasks()
+│   │   ├── Clear current task list display
+│   │   ├── If no tasks in list:
+│   │   │   ├── Show "Your to-do list is empty" if total tasks == 0
+│   │   │   └── Show "No tasks found for this filter" if tasks exist but filter has no match
+│   │   ├── Else for each task in filteredTasks:
+│   │   │   ├── Create <li> container
+│   │   │   ├── Create checkbox → sets completed state
+│   │   │   ├── Create span → displays task text
+│   │   │   ├── Add "Completed" CSS class if task is done
+│   │   │   ├── Create delete icon
+│   │   │   ├── Append checkbox, text, and delete icon to li
+│   │   │   └── Append li to task list in DOM
+│   │   └── updateItemsLeft() // Update remaining tasks count
+│   │
+│   ├── handleToggle(id)
+│   │   ├── Flip the completed value of the task with matching id
+│   │   └── applyFilter() // Refresh UI
+│   │
+│   ├── deleteTask(id)
+│   │   ├── Remove task from tasks[] by ID
+│   │   └── applyFilter()
+│   │
+│   └── updateItemsLeft()
+│       ├── Count tasks where completed == false
+│       └── Show number in footer span
+
+What this app does
+
+A simple to-do list where you can:
+
+Add tasks (by clicking Add or pressing Enter)
+
+Filter by All / Active / Completed
+
+Toggle a task’s complete state
+
+Delete individual tasks
+
+Clear all completed tasks
+
+See how many items are left
+
+1) Utilities & State
+generateTaskId()
+function generateTaskId() {
+  return Math.floor(1000 + Math.random() * 9000);
+}
+
+
+Returns an integer in the range 1000–9999.
+
+Used as a task’s unique id (random; collisions are unlikely but possible in theory).
+
+DOM references & app state
+const addButton = document.getElementById('add-button');
+const inputField = document.getElementById('input-field');
+let taskList = document.getElementById("task-list");
+let tasks = [];
+const filterButtons = document.querySelectorAll(".filter-btn");
+let currentFilter = "All";
+let filteredTasks = [];
+
+
+tasks: the full list of tasks.
+
+filteredTasks: what’s currently shown (depends on the active filter).
+
+currentFilter: one of "All" | "Active" | "Completed".
+
+2) Adding tasks
+Add via button click
+addButton.addEventListener("click", () => {
+  let taskText = inputField.value.trim();
+  
+  //.trim()
+
+.trim() is a built-in JavaScript string method.
+
+It removes all leading and trailing whitespace (spaces, tabs, newlines) from the string.
+
+Example:
+
+" Hello ".trim() → "Hello".
+
+" ".trim() → "" (empty string).
+
+let taskText = ...;
+
+Stores the cleaned-up input (without extra spaces at the start or end) into a variable named taskText.
+
+✅ Why use it?
+When building apps like a to-do list, users might accidentally add spaces before/after their task names. Using .trim() ensures you store only the meaningful text.
+
+👉 Without .trim(): " Buy milk " gets stored with spaces.
+👉 With .trim(): "Buy milk" is stored cleanly.
+
+  if (taskText === "") { alert("Please enter a task!"); return; }
+  addTask(taskText);
+  applyFilter();
+  inputField.value = '';
+});
+
+
+Reads & trims text.
+
+Blocks empty input.
+
+Calls addTask to push a new task into tasks.
+
+Calls applyFilter() to refresh the view.
+
+Clears the input.
+
+Add via Enter key
+inputField.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    // same logic as click handler
+  }
+});
+
+
+Same flow as the button.
+
+addTask()
+function addTask(userInput) {
+  const newTask = { id: generateTaskId(), text: userInput, completed: false };
+  tasks.push(newTask);
+}
+
+
+Creates a new task object and appends it to tasks.
+
+3) Filtering
+Filter button setup
+filterButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    filterButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.getAttribute('data-filter'); // "All" | "Active" | "Completed"
+    applyFilter();
+  });
+});
+
+
+Visually marks the current filter button as active.
+
+Updates currentFilter and re-renders.
+
+applyFilter()
+function applyFilter() {
+  if (currentFilter === "All") {
+    filteredTasks = tasks;
+  } else if (currentFilter === "Active") {
+    filteredTasks = tasks.filter(task => !task.completed);
+  } else {
+    filteredTasks = tasks.filter(task => task.completed);
+  }
+  showTasks();
+}
+
+
+Decides what filteredTasks should be.
+
+Calls showTasks() to rebuild the list.
+
+Note: For "All", it sets filteredTasks = tasks (same array reference). That’s fine because you always call applyFilter() after any change.
+
+4) Rendering the list
+showTasks()
+function showTasks() {
+  taskList.innerHTML = "";
+
+  if (filteredTasks.length === 0 && tasks.length === 0) {
+    taskList.innerHTML = '<li class="empty-message">Your to-do list is empty</li>';
+    return;
+  } else if (filteredTasks.length === 0 && tasks.length > 0) {
+    taskList.innerHTML = '<li class="empty-message">No tasks found for this filter.</li>';
+    return;
+  }
+
+  filteredTasks.forEach((task) => {
+    let li = document.createElement("li");
+    li.setAttribute("data-id", task.id);
+
+    const checkbox = document.createElement('input');
+    const span = document.createElement('span');
+    const deleteBtn = document.createElement('i');
+
+    // checkbox
+    checkbox.type = 'checkbox';
+    checkbox.checked = task.completed;
+    checkbox.addEventListener("change", () => {
+      handleToggle(task.id);
+    });
+
+    // text
+    span.innerText = task.text;
+    if (task.completed) {
+      span.classList.add('Completed'); // assumes your CSS uses this class
+    }
+
+    // delete button
+    deleteBtn.classList.add('fas', 'fa-trash');
+    deleteBtn.addEventListener("click", () => {
+      deleteTask(task.id);
+    });
+
+    li.append(checkbox, span, deleteBtn);
+    taskList.append(li);
+  });
+
+  updateItemsLeft();
+}
+
+
+Clears the list container.
+
+Shows a helpful empty message if needed.
+
+Builds each <li> with:
+
+A checkbox (toggles completed)
+
+A <span> for the text (+ a CSS class if completed)
+
+A trash icon to delete
+
+Hooks listeners for toggle and delete.
+
+Updates the “items left” counter at the end.
+
+5) Updating task state
+Toggle complete
+function handleToggle(id) {
+  tasks = tasks.map((task) => {
+    if (task.id === id) {
+      return { ...task, completed: !task.completed };
+    } else {
+      return task;
+    }
+  });
+  applyFilter();
+}
+
+
+Replaces tasks with a new array, flipping completed for the matching id.
+
+Reapplies the filter to refresh the view.
+
+Delete a task
+function deleteTask(id) {
+  tasks = tasks.filter(task => task.id !== id);
+  applyFilter();
+}
+
+
+Removes the matching task and re-renders.
+
+Clear completed
+const clearCompletedButton = document.querySelector(".list-footer button");
+clearCompletedButton.addEventListener("click", () => {
+  tasks = tasks.filter(task => !task.completed);
+  applyFilter();
+});
+
+
+Keeps only active tasks and refreshes.
+
+6) Items left footer
+function updateItemsLeft() {
+  const itemsLeftSpan = document.querySelector(".list-footer span");
+  const activeTasks = tasks.filter(task => !task.completed).length;
+  itemsLeftSpan.textContent = `${activeTasks} items left`;
+}
+
+
+Counts incomplete tasks and updates the footer text.
+
+7) Initial load
+document.addEventListener("DOMContentLoaded", () => {
+  applyFilter();
+  updateItemsLeft();
+});
+
+
+When the page is ready, renders the current (empty) state and shows “0 items left”.
+
+Typical user flow (quick mental model)
+
+Page loads → applyFilter() → shows “Your to-do list is empty”.
+
+You type a task and press Enter (or click Add) → addTask() pushes it → applyFilter() → showTasks() rebuilds → footer updates.
+
+Toggle a checkbox → handleToggle() updates tasks → applyFilter() → UI re-renders.
+
+Click Completed filter → applyFilter() sets filteredTasks accordingly → re-renders.
+
+Click trash icon → deleteTask() → applyFilter() → re-render.
+
+Click Clear Completed → removes all completed → re-render.
+
+Small notes & easy improvements (optional)
+
+Class name casing: You add 'Completed' (capital C). Make sure your CSS matches exactly, or consider 'completed' for consistency.
+
+ID collisions: Rare, but possible. If you want to be safe, regenerate while an id exists in tasks.
+
+Persistence: Save/load tasks to localStorage so the list survives refreshes.
+
+Accessibility: Use a <button> for delete with aria-label="Delete task" instead of relying on an <i> alone; associate labels with checkboxes.
+
+Performance: For very large lists, consider event delegation instead of attaching listeners per item.
+
+If you want, I can add localStorage in-place and show exactly where to put it.
+│
+└── End
+
+
+// ✅ Utility: Generate Unique ID
+function generateTaskId() {
+    return Math.floor(1000 + Math.random() * 9000);
+}
+
+// ✅ Step 2: Store tasks in an array
+let tasks = [];
+let filteredTasks = [];
+let currentFilter = "All";
+
+// ✅ Step 1: Access DOM Elements
+const addButton = document.getElementById('add-button');
+const inputField = document.getElementById('input-field');
+let taskList = document.getElementById("task-list");
+const filterButtons = document.querySelectorAll(".filter-btn");
+const clearCompletedButton = document.querySelector(".list-footer button");
+const itemsLeftSpan = document.querySelector(".list-footer span");
+
+// ================== EVENT LISTENERS ==================
+
+// ✅ Step 3: Add task when button is clicked
+addButton.addEventListener("click", () => {
+    let taskText = inputField.value.trim();
+    if (taskText === "") {
+        alert("Please enter a task!");
+        return;
+    }
+    addTask(taskText);
+    applyFilter();
+    inputField.value = ''; // ✅ Step 5: Clear input field
+});
+
+// ✅ Step 4: Add task when Enter key is pressed
+inputField.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        let taskText = inputField.value.trim();
+        if (taskText === "") {
+            alert("Please enter a task!");
+            return;
+        }
+        addTask(taskText);
+        applyFilter();
+        inputField.value = ''; // ✅ Step 5: Clear input field
+    }
+});
+
+// ✅ Step 7: Highlight clicked filter button & filter tasks
+filterButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+        filterButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.getAttribute('data-filter');
+        applyFilter();
+    });
+});
+
+// ✅ Step 10: Clear Completed button functionality
+clearCompletedButton.addEventListener("click", () => {
+    tasks = tasks.filter(task => !task.completed);
+    applyFilter();
+});
+
+// ✅ Step 3 (Empty list message) - Run on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+    applyFilter();
+    updateItemsLeft();
+});
+
+// ================== FUNCTIONS ==================
+
+// ✅ Step 6: Add Task Function
+function addTask(userInput) {
+    const newTask = {
+        id: generateTaskId(),
+        text: userInput,
+        completed: false // default
+    };
+    tasks.push(newTask);
+}
+
+// ✅ Step 8: Apply Filters
+function applyFilter() {
+    if (currentFilter === "All") {
+        filteredTasks = tasks;
+    } else if (currentFilter === "Active") {
+        filteredTasks = tasks.filter(task => !task.completed);
+    } else {
+        filteredTasks = tasks.filter(task => task.completed);
+    }
+    showTasks();
+}
+
+// ✅ Step 1, 6, 8: Render tasks (with empty list handling)
+function showTasks() {
+    taskList.innerHTML = "";
+
+    if (filteredTasks.length === 0 && tasks.length === 0) {
+        taskList.innerHTML = '<li class="empty-message">Your to-do list is empty</li>';
+        return;
+    } else if (filteredTasks.length === 0 && tasks.length > 0) {
+        taskList.innerHTML = '<li class="empty-message">No tasks found for this filter.</li>';
+        return;
+    }
+
+    filteredTasks.forEach((task) => {
+        let li = document.createElement("li");
+        li.setAttribute("data-id", task.id);
+
+        const checkbox = document.createElement('input');
+        const span = document.createElement('span');
+        const deleteBtn = document.createElement('i');
+
+        // checkbox
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        checkbox.addEventListener("change", () => {
+            handleToggle(task.id);
+        });
+
+        // span (task text)
+        span.innerText = task.text; //task.text holds the user’s input (e.g., "Buy milk").
+        if (task.completed) {
+            span.classList.add('completed'); // ✅ strike-through class
+        }
+
+        // delete button
+        deleteBtn.classList.add('fas', 'fa-trash');
+        deleteBtn.addEventListener("click", () => {
+            deleteTask(task.id);
+        });
+
+        // append elements to li
+        li.append(checkbox);
+        li.append(span);
+        li.append(deleteBtn);
+        taskList.append(li);
+    });
+
+    updateItemsLeft(); // ✅ Step 9
+}
+
+// ✅ Step 6: Toggle completion
+function handleToggle(id) {
+    tasks = tasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+    );
+    applyFilter();
+}
+
+// ✅ Delete task
+function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    applyFilter();
+}
+
+// ✅ Step 9: Update Active Task Counter
+function updateItemsLeft() {
+    const activeTasks = tasks.filter(task => !task.completed).length;
+    itemsLeftSpan.textContent = `${activeTasks} items left`;
+}
+
