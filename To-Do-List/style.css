@@ -1,0 +1,183 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2980b9;
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --medium-gray: #ddd;
+    --dark-gray: #888;
+    --white: #fff;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(100deg, #667eea 0%, #764ba2 100%);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    background-color: var(--white);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    border-radius: 12px;
+}
+
+h1 {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 i {
+    margin-right: 10px;
+}
+
+.input-container {
+    display: flex;
+    flex-grow: 1;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+#input-field {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px 0 0 6px;
+    font-size: 1.2rem;
+    outline: none;
+}
+
+#input-field:focus {
+    border: 2px solid var(--primary-color);
+    outline: none;
+}
+
+#add-button {
+    padding: 12px 20px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--light-gray);
+    border-bottom: 1px solid var(--medium-gray);
+    padding: 10px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    color: var(--dark-gray);
+    border: none;
+    background: none;
+    border-radius: 4px;
+    margin: 0 5px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#task-list {
+    border-top: 1px solid var(--medium-gray);
+    border-bottom: 1px solid var(--medium-gray);
+    height: 400px;
+    list-style: none;
+    overflow-y: auto;
+}
+
+#task-list li {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+#task-list li:hover {
+    background-color: var(--light-gray);
+}
+
+#task-list input[type="checkbox"] {
+    margin-right: 15px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--success-color);
+}
+
+#task-list span {
+    flex-grow: 1;
+    word-break: break-word;
+}
+
+#task-list .Completed {
+    text-decoration: line-through;
+    color: var(--dark-gray);
+}
+
+#task-list i {
+    color: var(--danger-color);
+    cursor: pointer;
+    visibility: hidden;
+    padding: 5px;
+}
+
+#task-list li:hover i {
+    visibility: visible;
+}
+
+.list-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background-color: var(--light-gray);
+    border-top: 1px solid var(--medium-gray);
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+
+.list-footer button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+}
+
+.list-footer button:hover {
+    color: var(--danger-color);
+    text-decoration: underline;
+}
+
+.empty-message {
+    font-style: italic;
+    color: var(--dark-gray);
+    text-align: center;
+    padding: 20px;
+}
