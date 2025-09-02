@@ -1,0 +1,515 @@
+1. Selecting DOM elements
+javascript
+Copy code
+const toggleFormBtn = document.getElementById("toggle-form");
+const bookForm = document.getElementById("book-form");
+const typeSelect = document.getElementById("type");
+const ebookDetails = document.getElementById("ebook-details");
+const bookList = document.getElementById("book-list");
+const addBooksection = document.querySelector(".add-book-section");
+This grabs references to HTML elements that you'll interact with:
+
+toggleFormBtn → Button to show/hide the form.
+
+bookForm → The form to add a new book.
+
+typeSelect → Dropdown for book type (physical or E-Book).
+
+ebookDetails → Extra input fields for e-books.
+
+bookList → Container to display books.
+
+addBooksection → Section that contains the add-book form.
+
+2. Setting up the books array
+javascript
+Copy code
+let books = [];
+This will store all book objects in memory. Later, it will also be synced with localStorage.
+
+3. Toggle the add-book form
+javascript
+Copy code
+toggleFormBtn.addEventListener("click", () => {
+    if (addBooksection.style.display === 'none') {
+        addBooksection.style.display = 'block';
+        toggleFormBtn.textContent = 'Hide Form';
+    } else {
+        addBooksection.style.display = 'none';
+        toggleFormBtn.textContent = 'Add New Book';
+    }
+});
+Clicking the button shows or hides the add-book form.
+
+Changes the button text dynamically.
+
+4. Show/hide e-book details
+javascript
+Copy code
+typeSelect.addEventListener("change", () => {
+    if (typeSelect.value === 'E-Book') {
+        ebookDetails.style.display = 'block';
+    } else {
+        ebookDetails.style.display = 'none';
+    }
+});
+If the user selects “E-Book”, extra input fields appear.
+
+If the user selects “Physical”, those fields are hidden.
+
+5. Handling form submission
+javascript
+Copy code
+bookForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById('title').value;
+    const author = document.getElementById('author').value;
+
+    const book = new Book(title, author);
+    books.push(book);
+    saveBooks();
+    displayBooks();
+    bookForm.reset();
+});
+Prevents the default form submission.
+
+Gets the title and author from the form.
+
+Creates a new Book object.
+
+Adds it to the books array.
+
+Saves the array to localStorage with saveBooks().
+
+Updates the UI with displayBooks().
+
+Resets the form for the next entry.
+
+6. Book class
+javascript
+Copy code
+class Book {
+    constructor(title, author) {
+        this.title = title;
+        this.author = author;
+        this.id = Date.now(); // unique ID
+        this.type = 'physical'; // default type
+        this.available = true;
+        this.borrower = null;
+    }
+
+    borrow(borrower) {
+        this.available = false;
+        this.borrower = borrower;
+    }
+
+    returnBook() {
+        this.available = true;
+        this.borrower = null;
+    }
+
+    getHTML() {
+        return `
+        <div class="book-card" data-id="${this.id}">
+            <h3 class="book-title">${this.title}</h3>
+            <div class="book-meta">Author: ${this.author}</div>
+            <div class="book-meta">Status: ${this.borrower ? `Borrowed by ${this.borrower}` : 'Available'}</div>
+            <div class="book-actions">
+                ${this.available
+                ? `<button class="btn btn-borrow">Borrow</button>`
+                : `<button class="btn btn-return">Return</button>`
+            }
+                <button class="btn btn-remove">Remove</button>
+            </div>
+        </div>
+        `;
+    }
+}
+Properties: title, author, id, type, available, borrower.
+
+Methods:
+
+borrow(borrower) → Marks the book as borrowed and records the borrower.
+
+returnBook() → Marks the book as available.
+
+getHTML() → Returns the HTML string to display this book card.
+
+7. Saving and loading books
+javascript
+Copy code
+function saveBooks() {
+    localStorage.setItem("books", JSON.stringify(books));
+}
+
+function loadBooks() {
+    const saved = JSON.parse(localStorage.getItem("books") || "[]");
+    books = saved.map(b => {
+        const book = new Book(b.title, b.author);
+        book.id = b.id;
+        book.type = b.type;
+        book.available = b.available;
+        book.borrower = b.borrower;
+        return book;
+    });
+}
+saveBooks() → Converts books array to JSON and stores it in the browser.
+
+loadBooks() → Reads JSON from localStorage and converts it back into Book objects.
+
+8. Displaying books
+javascript
+Copy code
+function displayBooks() {
+    bookList.innerHTML = '';
+
+    if (books.length === 0) {
+        bookList.innerHTML = `<p>No books found</p>`;
+        return;
+    }
+
+    books.forEach(b => {
+        bookList.innerHTML += b.getHTML();
+    });
+
+    attachEventListeners();
+}
+Clears the previous list.
+
+Shows a message if no books exist.
+
+Adds each book’s HTML to the page.
+
+Calls attachEventListeners() to make the buttons work.
+
+9. Attaching button events
+javascript
+Copy code
+function attachEventListeners() {
+    document.querySelectorAll('.btn-borrow').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const bookId = e.target.closest('.book-card').getAttribute("data-id");
+            const bookBorrower = prompt('Enter your name');
+            borrowBooks(bookId, bookBorrower);
+        });
+    });
+
+    document.querySelectorAll('.btn-return').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const bookId = e.target.closest('.book-card').getAttribute("data-id");
+            returnBook(bookId);
+        });
+    });
+
+    document.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const confirmDelete = confirm("Are you sure you want to remove this book?");
+            if (!confirmDelete) return;
+
+            const bookId = e.target.closest('.book-card').getAttribute("data-id");
+            removeBook(bookId);
+        });
+    });
+}
+Adds functionality to Borrow, Return, and Remove buttons for each book card.
+
+Uses closest('.book-card') to identify which book was clicked.
+
+10. Borrow, return, and remove functions
+javascript
+Copy code
+function borrowBooks(bookId, borrower) {
+    books.forEach(book => {
+        if (book.id == bookId) {
+            book.borrow(borrower);
+        }
+    });
+    saveBooks();
+    displayBooks();
+}
+
+function returnBook(bookId) {
+    books.forEach(book => {
+        if (book.id == bookId) {
+            book.returnBook();
+        }
+    });
+    saveBooks();
+    displayBooks();
+}
+
+function removeBook(bookId) {
+    books = books.filter(book => book.id != bookId);
+    saveBooks();
+    displayBooks();
+}
+borrowBooks() → Marks a book as borrowed.
+
+returnBook() → Marks a book as available.
+
+removeBook() → Deletes a book from the list.
+
+All of them save the new state and refresh the display.
+
+11. Initialize app
+javascript
+Copy code
+loadBooks();
+displayBooks();
+Loads books from localStorage when the page loads.
+
+Displays all books.
+
+✅ Summary:
+
+You can add, borrow, return, and remove books.
+
+State is saved in localStorage, so refreshing the page keeps your books.
+
+Extra UI features: toggle form visibility, show e-book details.
+
+If you want, I can also make a diagram showing how data flows from form → book object → localStorage → DOM. It makes this much easier to visualize.
+
+[User] 
+   │
+   ▼
+[Fills in form: Title, Author, Type]
+   │
+   ▼
+[Clicks "Submit"]
+   │
+   ▼
+[bookForm submit event]
+   │
+   ▼
+[Create new Book object]
+   │
+   ├─ Properties: title, author, id, type, available, borrower
+   │
+   ▼
+[Push Book object into books array]
+   │
+   ▼
+[saveBooks()]
+   │
+   └─ Converts books array → JSON → saves to localStorage
+   │
+   ▼
+[displayBooks()]
+   │
+   ├─ Clears previous list
+   ├─ Loops through books array → book.getHTML() for each
+   ├─ Adds HTML to DOM (#book-list)
+   └─ attachEventListeners() → add click events to Borrow/Return/Remove buttons
+   │
+   ▼
+[User clicks Borrow/Return/Remove button]
+   │
+   ├─ Borrow: prompt for name → book.borrow(name)
+   ├─ Return: book.returnBook()
+   └─ Remove: books array filtered → remove book
+   │
+   ▼
+[saveBooks() → update localStorage]
+   │
+   ▼
+[displayBooks() → refresh DOM]
+   │
+   ▼
+[Updated book list shown to user]
+
+
+1) Variables & initial state
+Grab DOM elements you’ll interact with:
+
+#toggle-form, #book-form, #type, #ebook-details, #book-list, and .add-book-section.
+
+Keep the app’s data in let books = []; (an array of Book/EBook instances).
+
+2) Show/Hide the Add Book form
+Clicking the Toggle button:
+
+If .add-book-section is hidden (display: 'none'), show it and set the button text to “Hide Form”.
+
+Otherwise hide it and set text to “Add New Book”.
+
+3) Show/Hide ebook-only inputs
+When the Type <select> changes:
+
+If value is 'E-Book', show #ebook-details (so the user can enter file size).
+
+Otherwise hide #ebook-details.
+
+4) Handle form submit (create and store a book)
+Prevent the page reload with e.preventDefault().
+
+Read title and author inputs.
+
+If the selected type is 'E-Book':
+
+Read fileSize, create new EBook(title, author, fileSize).
+
+Else:
+
+Create new Book(title, author).
+
+Push the new instance into books.
+
+saveBooks() → serialize to localStorage.
+
+displayBooks() → re-render the UI.
+
+bookForm.reset() → clear the form fields.
+
+5) The classes
+Book
+constructor(title, author) sets:
+
+id as a unique-ish string (Date.now().toString(36) + random bits).
+
+type = 'physical', available = true, borrower = null.
+
+borrow(name) marks available = false, stores borrower.
+
+markReturn() resets available = true, borrower = null.
+
+getHTML() returns a card:
+
+Shows title, author, status (“Available” or “borrowed by …”).
+
+Shows a Borrow button if available, otherwise a Return button, plus a Remove button.
+
+EBook (extends Book)
+constructor(title, author, fileSize) calls super(...), then sets:
+
+this.fileSize = fileSize, this.type = 'ebook'.
+
+Overrides:
+
+borrow(name) → just sets this.borrower = name (ebooks don’t use available here).
+
+markReturn() → sets this.borrower = null.
+
+getHTML() returns a slightly different card:
+
+Includes “File Size”.
+
+Status is based on borrower (“downloaded by …” vs “Available”).
+
+Button shows Download (if not yet borrowed) or Return, plus Remove.
+
+6) Rendering the list + wiring buttons
+displayBooks():
+
+Clear #book-list.
+
+If books is empty → show “No books found”.
+
+Else:
+
+For each book instance, append book.getHTML() to the list.
+
+After injecting the HTML, attach click handlers to the new buttons:
+
+.btn-borrow → prompt for a name → borrowBooks(bookId, name).
+
+.btn-return → returnBooks(bookId).
+
+.btn-remove → confirm → removeBooks(bookId).
+
+7) Actions that mutate data and re-render
+borrowBooks(bookId, borrower)
+
+Find the matching book by id and call its .borrow(borrower).
+
+saveBooks() then displayBooks().
+
+returnBooks(bookId)
+
+Find the matching book and call .markReturn().
+
+saveBooks() then displayBooks().
+
+removeBooks(bookId)
+
+books = books.filter(book => book.id != bookId) (remove the match).
+
+saveBooks() then displayBooks().
+
+8) Persisting and restoring books
+saveBooks():
+
+localStorage.setItem("booksArray", JSON.stringify(books)).
+
+loadBooks():
+
+Read "booksArray" and JSON.parse it (you get plain objects without methods).
+
+“Rehydrate” each object back into a real class instance:
+
+If obj.type === 'ebook' → new EBook(...), then copy id, borrower, available.
+
+Else → new Book(...), then copy id, borrower, available.
+
+Assign the resulting array to books.
+
+9) Seeding defaults
+addDefaultBooks() creates arrays of Book and EBook instances.
+
+Push them into books, then saveBooks().
+
+10) App bootstrap (page load sequence)
+On DOMContentLoaded:
+
+loadBooks() — attempt to rebuild books from saved data.
+
+If there’s nothing saved (books.length === 0) → addDefaultBooks() (seed and save).
+
+displayBooks() — render the UI.
+
+11) What you’ll see in common flows
+First visit ever
+
+Storage empty → loadBooks() gives [].
+
+addDefaultBooks() seeds 7 books → saved.
+
+displayBooks() shows the seeded list.
+
+Add a new book
+
+Submit form → instance created → pushed → saved → list re-rendered.
+
+Reload the page
+
+loadBooks() recreates instances from storage.
+
+No seeding (since there’s data) → displayBooks() shows your saved list.
+
+Borrow / Download
+
+Click Borrow (physical) or Download (ebook), enter a name.
+
+That book updates, saves, re-renders with Return.
+
+Return
+
+Click Return → status resets, saves, re-renders with Borrow/Download.
+
+Remove
+
+Confirm → the book is filtered out, saved, and the list re-renders without it.
+
+Tiny polish you might consider
+Fix typos: “Availble” → “Available”.
+
+Confirm message on remove: say “Are you sure you want to remove?”.
+
+Prefer strict equality (=== / !==) when comparing ids.
+
+Keep type values consistent (e.g., use 'ebook' everywhere, not 'E-Book' in one place and 'ebook' in another).
+
+(Optional) For ebooks, either ignore available completely or update it in the overrides to keep data consistent.
+
+If you want, I can paste a version with those small tweaks applied.
+
